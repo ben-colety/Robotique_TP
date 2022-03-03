@@ -5,12 +5,13 @@
 	.eabi_attribute 24, 1
 	.eabi_attribute 25, 1
 	.eabi_attribute 26, 1
-	.eabi_attribute 30, 1
+	.eabi_attribute 30, 2
 	.eabi_attribute 34, 1
 	.eabi_attribute 18, 4
 	.file	"test.c"
-	.text
+	.section	.text.startup,"ax",%progbits
 	.align	1
+	.p2align 2,,3
 	.global	main
 	.syntax unified
 	.thumb
