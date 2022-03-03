@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="0.913293560">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="0.913293560" moduleId="org.eclipse.cdt.core.settings" name="Default">
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.VCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration buildProperties="" description="" id="0.913293560" name="Default" parent="org.eclipse.cdt.build.core.prefbase.cfg">
+					<folderInfo id="0.913293560." name="/" resourcePath="">
+						<toolChain id="org.eclipse.cdt.build.core.prefbase.toolchain.744744945" name="No ToolChain" resourceTypeBasedDiscovery="false" superClass="org.eclipse.cdt.build.core.prefbase.toolchain">
+							<targetPlatform id="org.eclipse.cdt.build.core.prefbase.toolchain.744744945.2022725637" name=""/>
+							<builder id="org.eclipse.cdt.build.core.settings.default.builder.117634320" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.libs.2070541049" name="holder for library settings" superClass="org.eclipse.cdt.build.core.settings.holder.libs"/>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.2017373463" name="Assembly" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.2001670011" languageId="org.eclipse.cdt.core.assembly" languageName="Assembly" sourceContentType="org.eclipse.cdt.core.asmSource" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.669007836" name="GNU C++" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1349255625" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+							<tool id="org.eclipse.cdt.build.core.settings.holder.598535369" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder">
+								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1848956275" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<fileInfo id="0.913293560.1393344432" name="system_clock_config.c" rcbsApplicability="disable" resourcePath="ST/system_clock_config.c" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.598535369.1438693876">
+						<tool id="org.eclipse.cdt.build.core.settings.holder.598535369.1438693876" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.2017373463">
+							<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1662059998" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+						</tool>
+					</fileInfo>
+					<fileInfo id="0.913293560.329269164" name="system_stm32f4xx.c" rcbsApplicability="disable" resourcePath="ST/system_stm32f4xx.c" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.598535369.915072723">
+						<tool id="org.eclipse.cdt.build.core.settings.holder.598535369.915072723" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.2017373463">
+							<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1746440461" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+						</tool>
+					</fileInfo>
+					<fileInfo id="0.913293560.440901988" name="stm32f4xx_ll_rcc.c" rcbsApplicability="disable" resourcePath="ST/stm32f4xx_ll_rcc.c" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.598535369.1382551">
+						<tool id="org.eclipse.cdt.build.core.settings.holder.598535369.1382551" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.2017373463">
+							<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1723098796" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+						</tool>
+					</fileInfo>
+					<fileInfo id="0.913293560.1397878073" name="timer.c" rcbsApplicability="disable" resourcePath="timer.c" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.598535369.1640152897">
+						<tool id="org.eclipse.cdt.build.core.settings.holder.598535369.1640152897" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.2017373463">
+							<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.204618595" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+						</tool>
+					</fileInfo>
+					<fileInfo id="0.913293560.823721081" name="main.c" rcbsApplicability="disable" resourcePath="main.c" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.598535369.917333298">
+						<tool id="org.eclipse.cdt.build.core.settings.holder.598535369.917333298" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.2017373463">
+							<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1870045767" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+						</tool>
+					</fileInfo>
+					<fileInfo id="0.913293560.1498574479" name="gpio.c" rcbsApplicability="disable" resourcePath="gpio.c" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.598535369.1213100090">
+						<tool id="org.eclipse.cdt.build.core.settings.holder.598535369.1213100090" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.2017373463">
+							<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.413665885" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
+						</tool>
+					</fileInfo>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="TP_01 Restart.null.1416462121" name="TP_01 Restart"/>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="0.913293560">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.make.core.GCCStandardMakePerFileProfile"/>
+		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+</cproject>
