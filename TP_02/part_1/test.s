@@ -54,7 +54,7 @@ main:
 	ldr	r3, [r7, #12]
 	cmp	r3, #9
 	ble	.L5
-	movs	r3, #0
+	ldr	r3, [r7, #4]
 	mov	r0, r3
 	adds	r7, r7, #20
 	mov	sp, r7
