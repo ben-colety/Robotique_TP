@@ -18,49 +18,45 @@
 	.fpu softvfp
 	.type	main, %function
 main:
-	@ args = 0, pretend = 0, frame = 24
+	@ args = 0, pretend = 0, frame = 16
 	@ frame_needed = 1, uses_anonymous_args = 0
 	@ link register save eliminated.
 	push	{r7}
-	sub	sp, sp, #28
+	sub	sp, sp, #20
 	add	r7, sp, #0
 	movs	r3, #0
-	str	r3, [r7, #8]
-	movs	r3, #5
 	str	r3, [r7, #4]
-	movs	r3, #10
-	str	r3, [r7, #8]
 	movs	r3, #0
-	str	r3, [r7, #20]
+	str	r3, [r7, #12]
 	b	.L2
 .L5:
 	movs	r3, #0
-	str	r3, [r7, #16]
+	str	r3, [r7, #8]
 	b	.L3
 .L4:
-	ldr	r2, [r7, #20]
-	ldr	r3, [r7, #16]
-	add	r3, r3, r2
 	ldr	r2, [r7, #12]
+	ldr	r3, [r7, #8]
 	add	r3, r3, r2
-	str	r3, [r7, #12]
-	ldr	r3, [r7, #16]
+	ldr	r2, [r7, #4]
+	add	r3, r3, r2
+	str	r3, [r7, #4]
+	ldr	r3, [r7, #8]
 	adds	r3, r3, #1
-	str	r3, [r7, #16]
+	str	r3, [r7, #8]
 .L3:
-	ldr	r3, [r7, #16]
+	ldr	r3, [r7, #8]
 	cmp	r3, #9
 	ble	.L4
-	ldr	r3, [r7, #20]
+	ldr	r3, [r7, #12]
 	adds	r3, r3, #1
-	str	r3, [r7, #20]
+	str	r3, [r7, #12]
 .L2:
-	ldr	r3, [r7, #20]
+	ldr	r3, [r7, #12]
 	cmp	r3, #9
 	ble	.L5
-	ldr	r3, [r7, #12]
+	movs	r3, #0
 	mov	r0, r3
-	adds	r7, r7, #28
+	adds	r7, r7, #20
 	mov	sp, r7
 	@ sp needed
 	pop	{r7}
