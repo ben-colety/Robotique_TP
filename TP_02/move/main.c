@@ -31,6 +31,9 @@ int main(void)
     RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIODEN;
     //set AFR for front led to rely on Ch3 Tim4
     gpio_config_af(FRONT_LED,2);
+    //start timer 4
+    timer4_start();
+
 
     while (1) {
         
