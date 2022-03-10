@@ -61,7 +61,9 @@ static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
 *   for example. They will be available only for the code of this file.
 */
 
-static int32_t = 0;
+static int16_t step_counter = 0;
+static uint8_t motor_right_state = 0;
+static uint8_t motor_left_state = 0;
 
 /*
 *
@@ -71,55 +73,72 @@ static int32_t = 0;
 */
 void motor_init(void)
 {
-	// Enable TIM6&7 clock
-	RCC->APB1ENR |= MOTOR_RIGHT_TIMER_EN |MOTOR_LEFT_TIMER_EN ;
+	// Enable clocks for motor timers
+	RCC->APB1ENR |= MOTOR_RIGHT_TIMER_EN | MOTOR_LEFT_TIMER_EN;
 
-	// Enable TIM7 interrupt vector
+	// Enable interrupt vector for motor timers
 	NVIC_EnableIRQ(MOTOR_RIGHT_IRQ);
 	NVIC_EnableIRQ(MOTOR_LEFT_IRQ);
 
 
-	// Configure TIM7
-	TIM7->PSC = PRESCALER_TIM7 - 1;      // Note: final timer clock  = timer clock / (prescaler + 1)
-	TIM7->ARR = COUNTER_MAX_TIM7 - 1;    // Note: timer reload takes 1 cycle, thus -1
-	TIM7->DIER |= TIM_DIER_UIE;          // Enable update interrupt
-	TIM7->CR1 |= TIM_CR1_CEN;            // Enable timer
+	// Configure right motor timer
+	MOTOR_RIGHT_TIMER->PSC = (TIMER_CLOCK/TIMER_FREQ) - 1;      // Note: final timer clock  = timer clock / (prescaler + 1)
+	MOTOR_RIGHT_TIMER->ARR = 0;   				 // 0 so interrupt is not thrown
+	MOTOR_RIGHT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
+	MOTOR_RIGHT_TIMER->CR1 |= TIM_CR1_CEN;            // Enable timer
+
+	// Configure left motor timer
+	MOTOR_LEFT_TIMER->PSC = (TIMER_CLOCK/TIMER_FREQ) - 1;      // Note: final timer clock  = timer clock / (prescaler + 1)
+	MOTOR_LEFT_TIMER->ARR = 0;   				 //
+	MOTOR_LEFT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
+	MOTOR_LEFT_TIMER->CR1 |= TIM_CR1_CEN;            // Enable timer
+
+
 }
 
 /*
 *
-*   TO COMPLETE
+*   TO COMPLETE (completed)
 *
 *   Updates the state of the gpios of the right motor given an array of 4 elements
 *   describing the state. For example step_table[0] which gives the first step.
 */
 static void right_motor_update(const uint8_t *out)
 {
-
+	out[0] ? set_gpio(MOTOR_RIGHT_A) : clear_gpio(MOTOR_RIGHT_A);
+	out[1] ? set_gpio(MOTOR_RIGHT_B) : clear_gpio(MOTOR_RIGHT_B);
+	out[2] ? set_gpio(MOTOR_RIGHT_C) : clear_gpio(MOTOR_RIGHT_C);
+	out[3] ? set_gpio(MOTOR_RIGHT_D) : clear_gpio(MOTOR_RIGHT_D);
 }
 
 /*
 *
-*   TO COMPLETE
+*   TO COMPLETE (completed)
 *
 *   Updates the state of the gpios of the left motor given an array of 4 elements
 *   describing the state. For exeample step_table[0] which gives the first step.
 */
 static void left_motor_update(const uint8_t *out)
 {
-
+	out[0] ? set_gpio(MOTOR_LEFT_A) : clear_gpio(MOTOR_LEFT_A); //fancy if else statements
+	out[1] ? set_gpio(MOTOR_LEFT_B) : clear_gpio(MOTOR_LEFT_B);
+	out[2] ? set_gpio(MOTOR_LEFT_C) : clear_gpio(MOTOR_LEFT_C);
+	out[3] ? set_gpio(MOTOR_LEFT_D) : clear_gpio(MOTOR_LEFT_D);
 }
 
 /*
 *
-*   TO COMPLETE
+*   TO COMPLETE (completed)
 *
 *   Stops the motors (all the gpio must be clear to 0) and set 0 to the ARR register of the timers to prevent
 *   the interrupts of the timers (because it never reaches 0 after an increment)
 */
 void motor_stop(void)
 {
-
+	right_motor_update(step_halt);
+	left_motor_update(step_halt);
+	MOTOR_RIGHT_TIMER->ARR = 0;
+	MOTOR_LEFT_TIMER->ARR = 0;
 }
 
 /*
@@ -147,7 +166,10 @@ void motor_set_position(float position_r, float position_l, float speed_r, float
 */
 void motor_set_speed(float speed_r, float speed_l)
 {
-
+	if(speed_r < MOTOR_SPEED_LIMIT)
+		MOTOR_RIGHT_TIMER->ARR = ;
+	if(speed_l < MOTOR_SPEED_LIMIT)
+		MOTOR_LEFT_TIMER ->ARR = ;
 }
 
 /*
