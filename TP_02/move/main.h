@@ -17,6 +17,10 @@ WARNING : Not on the same port !!
 #define FRONT_LED	GPIOD, 14
 #define BODY_LED	GPIOB, 2
 
+#define PWM_MODE_1	0b110
+#define PWM_MODE_2	0b111
+#define PWM_DUTY	0xEFFF
+
 void delay(unsigned int n);
 
 
