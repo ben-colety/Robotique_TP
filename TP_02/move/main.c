@@ -36,7 +36,8 @@ int main(void)
     gpio_config_input_pd(SEL_1);
     gpio_config_input_pd(SEL_2);
     gpio_config_input_pd(SEL_3);
-    unsigned int selector_val = (gpio_read(SEL_0) | (gpio_read(SEL_1) << 1) | (gpio_read(SEL_1) << 2) | (gpio_read(SEL_1) << 3));
+    unsigned int selector_val = 0;
+    selector_val = (gpio_read(SEL_0) | (gpio_read(SEL_1) << 1) | (gpio_read(SEL_1) << 2) | (gpio_read(SEL_1) << 3));
 
     //configure and start timer 4
     timer4_start();
