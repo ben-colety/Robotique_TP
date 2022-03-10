@@ -22,10 +22,16 @@ void timer4_start(void)
     TIM4->CR1 |= TIM_CR1_CEN;
 }
 
+void tim4ch3_pwm_set_duty(uint16_t duty){
+	TIM4->CCR3 = duty;
+}
+
+
+
 void tim4ch3_pwm_config(uint8_t mode, uint16_t duty){
 	if(mode < 16)
 		TIM4->CCMR2 |= (mode << 4) | (1 << 3) |(1 << 7); //OC3M to set output mode and OC3PE to enable preload and OC3CE to enable clear
-	TIM4->CCR3  = duty;
+	tim4ch3_pwm_set_duty(duty);
 	TIM4->CCER	|= (0b0001 << 8); 				//b11 = CC3NP (0 for output); b10 = res; b9 = CC3P (output 0 active high, 1 active low); b8 = CC3E (enable)
 	TIM4->CR1	|= (1 << 7);					//enable ARR
 }

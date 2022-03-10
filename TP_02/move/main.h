@@ -19,7 +19,12 @@ WARNING : Not on the same port !!
 
 #define PWM_MODE_1	0b110
 #define PWM_MODE_2	0b111
-#define PWM_DUTY	0xEFFF
+#define PWM_DUTY	0xFFFF
+
+#define SEL_0		GPIOC, 13
+#define SEL_1		GPIOC, 14
+#define SEL_2		GPIOC, 15
+#define SEL_3		GPIOD, 04
 
 void delay(unsigned int n);
 

@@ -29,20 +29,32 @@ int main(void)
     SystemClock_Config();
 
     // Enable GPIOD and GPIOE peripheral clock
-    RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIODEN;
+    RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIODEN | RCC_AHB1ENR_GPIOCEN;
+
+    //configure selector
+    gpio_config_input_pd(SEL_0);
+    gpio_config_input_pd(SEL_1);
+    gpio_config_input_pd(SEL_2);
+    gpio_config_input_pd(SEL_3);
+    unsigned int selector_val = (gpio_read(SEL_0) | (gpio_read(SEL_1) << 1) | (gpio_read(SEL_1) << 2) | (gpio_read(SEL_1) << 3));
 
     //configure and start timer 4
     timer4_start();
-    tim4ch3_pwm_config(PWM_MODE_1, PWM_DUTY);
+    tim4ch3_pwm_config(PWM_MODE_1, selector_val);
 
     //configure Front LED signal + set AFR for front led to rely on Ch3 Tim4
     gpio_config_output_af_pushpull(FRONT_LED);
     gpio_config_af(FRONT_LED,2);
 
-
-
     while (1) {
-        
+    	selector_val = gpio_read(SEL_0);
+    	selector_val += (gpio_read(SEL_1) << 1);
+    	selector_val += (gpio_read(SEL_2) << 2);
+    	selector_val += (gpio_read(SEL_3) << 3);
+    	selector_val *= 0x1111;
+    	tim4ch3_pwm_set_duty(selector_val);
+
+
     }
 }
 
