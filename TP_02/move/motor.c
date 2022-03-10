@@ -29,14 +29,14 @@
 *   Complete the right GPIO port and pin to be able to control the motors
 */
 #define MOTOR_RIGHT_A	GPIOE, 13
-#define MOTOR_RIGHT_B
-#define MOTOR_RIGHT_C
-#define MOTOR_RIGHT_D
+#define MOTOR_RIGHT_B	GPIOE, 12
+#define MOTOR_RIGHT_C	GPIOE, 14
+#define MOTOR_RIGHT_D	GPIOE, 15
 
-#define MOTOR_LEFT_A
-#define MOTOR_LEFT_B
-#define MOTOR_LEFT_C
-#define MOTOR_LEFT_D
+#define MOTOR_LEFT_A	GPIOE, 09
+#define MOTOR_LEFT_B	GPIOE, 08
+#define MOTOR_LEFT_C	GPIOE, 11
+#define MOTOR_LEFT_D	GPIOE, 10
 
 
 /*
