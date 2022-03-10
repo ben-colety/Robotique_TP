@@ -28,7 +28,7 @@
 *   TO COMPLETE
 *   Complete the right GPIO port and pin to be able to control the motors
 */
-#define MOTOR_RIGHT_A	GPIOE, 13
+#define MOTOR_RIGHT_A	GPIOE, 10//13
 #define MOTOR_RIGHT_B	GPIOE, 12
 #define MOTOR_RIGHT_C	GPIOE, 14
 #define MOTOR_RIGHT_D	GPIOE, 15
