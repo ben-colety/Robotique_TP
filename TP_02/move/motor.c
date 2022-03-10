@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stm32f4xx.h>
 #include <gpio.h>
+#include <timer.h>
 #include <motor.h>
 
 #define TIMER_CLOCK         84000000
@@ -25,7 +26,7 @@
 
 /*
 *
-*   TO COMPLETE
+*   TO COMPLETE (Completed)
 *   Complete the right GPIO port and pin to be able to control the motors
 */
 #define MOTOR_RIGHT_A	GPIOE, 13
@@ -41,16 +42,16 @@
 
 /*
 *
-*   TO COMPLETE
-*   step_halt is an array contaning 4 elements describing the state when the motors are off.
+*   TO COMPLETE (completed)
+*   step_halt is an array containing 4 elements describing the state when the motors are off.
 *   step_table is an array of 4 lines of 4 elements. Each line describes a step.
 */
-static const uint8_t step_halt[NB_OF_PHASES] = {, , , };
+static const uint8_t step_halt[NB_OF_PHASES] = {0, 0, 0, 0};
 static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
-    {, , , },
-    {, , , },
-    {, , , },
-    {, , , },
+    {1,0,1,0},
+    {0,1,1,0},
+    {0,1,0,1},
+    {1,0,0,1}
 };
 
 /*
@@ -60,6 +61,8 @@ static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
 *   for example. They will be available only for the code of this file.
 */
 
+static int32_t = 0;
+
 /*
 *
 *   TO COMPLETE
@@ -68,7 +71,19 @@ static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
 */
 void motor_init(void)
 {
+	// Enable TIM6&7 clock
+	RCC->APB1ENR |= MOTOR_RIGHT_TIMER_EN |MOTOR_LEFT_TIMER_EN ;
 
+	// Enable TIM7 interrupt vector
+	NVIC_EnableIRQ(MOTOR_RIGHT_IRQ);
+	NVIC_EnableIRQ(MOTOR_LEFT_IRQ);
+
+
+	// Configure TIM7
+	TIM7->PSC = PRESCALER_TIM7 - 1;      // Note: final timer clock  = timer clock / (prescaler + 1)
+	TIM7->ARR = COUNTER_MAX_TIM7 - 1;    // Note: timer reload takes 1 cycle, thus -1
+	TIM7->DIER |= TIM_DIER_UIE;          // Enable update interrupt
+	TIM7->CR1 |= TIM_CR1_CEN;            // Enable timer
 }
 
 /*
