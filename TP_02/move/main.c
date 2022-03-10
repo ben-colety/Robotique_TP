@@ -29,6 +29,8 @@ int main(void)
 
     // Enable GPIOD and GPIOE peripheral clock
     RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIODEN;
+    //set AFR for front led to rely on Ch3 Tim4
+    gpio_config_af(FRONT_LED,2);
 
     while (1) {
         

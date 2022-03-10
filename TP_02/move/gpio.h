@@ -7,6 +7,8 @@
 void gpio_config_input_pd(GPIO_TypeDef *port, unsigned int pin);
 void gpio_config_output_opendrain(GPIO_TypeDef *port, unsigned int pin);
 void gpio_config_output_pushpull(GPIO_TypeDef *port, unsigned int pin);
+void gpio_config_output_af_pushpull(GPIO_TypeDef *port, unsigned int pin);
+void gpio_config_af(GPIO_TypeDef *port, unsigned int pin, uint8_t af_selection);
 void gpio_set(GPIO_TypeDef *port, unsigned int pin);
 void gpio_clear(GPIO_TypeDef *port, unsigned int pin);
 void gpio_toggle(GPIO_TypeDef *port, unsigned int pin);
