@@ -13,6 +13,7 @@
 #define NB_OF_PHASES        4  //number of phases of the motors
 #define WHEEL_PERIMETER     13 // [cm]
 
+
 //timers to use for the motors
 #define MOTOR_RIGHT_TIMER       TIM6
 #define MOTOR_RIGHT_TIMER_EN    RCC_APB1ENR_TIM6EN
@@ -61,9 +62,14 @@ static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
 *   for example. They will be available only for the code of this file.
 */
 
-static int16_t step_counter = 0;
-static uint8_t motor_right_state = 0;
-static uint8_t motor_left_state = 0;
+static int16_t step_counter_r = 0;
+static int16_t step_counter_l = 0;
+static uint8_t goal_nsteps_position_r = 0; 	//nb steps needed to reach the position wanted for the right motor
+static uint8_t goal_nsteps_position_l = 0;	//nb steps needed to reach the position wanted for the left motor
+static uint8_t motor_r_position_state = 0; 	//flag
+static uint8_t motor_l_position_state = 0; 	//flag
+static uint8_t motor_r_speed_state = 0; 	//flag
+static uint8_t motor_l_speed_state = 0; 	//flag
 
 /*
 *
@@ -92,8 +98,6 @@ void motor_init(void)
 	MOTOR_LEFT_TIMER->ARR = 0;   				 //
 	MOTOR_LEFT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
 	MOTOR_LEFT_TIMER->CR1 |= TIM_CR1_CEN;            // Enable timer
-
-
 }
 
 /*
@@ -150,7 +154,35 @@ void motor_stop(void)
 */
 void motor_set_position(float position_r, float position_l, float speed_r, float speed_l)
 {
+	//reinitialization
+	step_counter_r = 0;
+	step_counter_l = 0;
 
+	//motor's position state flags and goal positions settings
+	if(position_r==0)
+	{
+		motor_r_position_state = 0;
+		goal_nsteps_position_r = 0;
+	}
+	else
+	{
+		goal_nsteps_position_r = position_r * NSTEP_ONE_TURN/WHEEL_PERIMETER; //conversion cm to steps
+		motor_r_position_state = 1;
+	}
+
+	if(position_l==0)
+	{
+		motor_l_position_state = 0;
+		goal_nsteps_position_l = 0;
+	}
+	else
+	{
+		goal_nsteps_position_l = position_l * NSTEP_ONE_TURN/WHEEL_PERIMETER; //conversion cm to steps
+		motor_l_position_state = 1;
+	}
+
+	//motor speeds settings
+	motor_set_speed(speed_r, speed_l);
 }
 
 /*
@@ -166,10 +198,39 @@ void motor_set_position(float position_r, float position_l, float speed_r, float
 */
 void motor_set_speed(float speed_r, float speed_l)
 {
-	if(speed_r < MOTOR_SPEED_LIMIT)
-		MOTOR_RIGHT_TIMER->ARR = ;
-	if(speed_l < MOTOR_SPEED_LIMIT)
-		MOTOR_LEFT_TIMER ->ARR = ;
+	if(speed_r == 0)
+	{	motor_r_speed_state=0;
+		MOTOR_RIGHT_TIMER->ARR = 0;
+	}
+	else
+	{
+		if(speed_r > MOTOR_SPEED_LIMIT)
+			{MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN);}	//with speed transformation from cm/s to step/s
+		else if(speed_r < -MOTOR_SPEED_LIMIT)
+			{MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN);}	//with speed transformation from cm/s to step/s
+		else
+			{MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(speed_r*NSTEP_ONE_TURN);}				//with speed transformation from cm/s to step/s
+
+		motor_r_speed_state=1;
+	}
+
+	if(speed_l == 0)
+	{
+		motor_l_speed_state=0;
+		MOTOR_LEFT_TIMER->ARR = 0;
+	}
+	else
+	{
+		if(speed_l > MOTOR_SPEED_LIMIT)
+			{MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN);}	//with speed transformation from cm/s to step/s
+		else if(speed_l < -MOTOR_SPEED_LIMIT)
+			{MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN);}	//with speed transformation from cm/s to step/s
+		else
+			{MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(speed_l*NSTEP_ONE_TURN);}				//with speed transformation from cm/s to step/s
+
+		motor_l_speed_state=1;
+	}
+
 }
 
 /*
@@ -194,6 +255,10 @@ void MOTOR_RIGHT_IRQHandler(void)
     */
 
 	/* do something ... */
+
+
+
+
 
 	// Clear interrupt flag
 	MOTOR_RIGHT_TIMER->SR &= ~TIM_SR_UIF;
