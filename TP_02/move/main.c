@@ -47,6 +47,18 @@ int main(void)
     gpio_config_output_af_pushpull(FRONT_LED);
     gpio_config_af(FRONT_LED,2);
 
+
+    //test pour debug
+    gpio_config_output_opendrain(LED1);
+    gpio_config_output_opendrain(LED3);
+    gpio_config_output_opendrain(LED5);
+    gpio_config_output_opendrain(LED7);
+
+    //config motors
+    motor_init();
+
+    robot_rotation_180();
+
     while (1) {
     	selector_val = gpio_read(SEL_0);
     	selector_val += (gpio_read(SEL_1) << 1);

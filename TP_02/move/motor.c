@@ -5,6 +5,14 @@
 #include <timer.h>
 #include <motor.h>
 
+//pour tester
+#define LED1     	GPIOD, 5
+#define LED3     	GPIOD, 6
+#define LED5     	GPIOD, 10
+#define LED7     	GPIOD, 11
+
+
+
 #define TIMER_CLOCK         84000000
 #define TIMER_FREQ          100000 // [Hz]
 #define MOTOR_SPEED_LIMIT   13 // [cm/s]
@@ -12,7 +20,10 @@
 #define NSTEP_ONE_EL_TURN   4  //number of steps to do 1 electrical turn
 #define NB_OF_PHASES        4  //number of phases of the motors
 #define WHEEL_PERIMETER     13 // [cm]
+#define ROBOT_PERIMETER		34.2 // [cm]
+#define ROBOT_WHEEL_GAP		5.5 // [cm]
 
+#define STANDARD_SPEED		7 // [cm/s]
 
 //timers to use for the motors
 #define MOTOR_RIGHT_TIMER       TIM6
@@ -35,12 +46,22 @@
 #define MOTOR_RIGHT_C	GPIOE, 14
 #define MOTOR_RIGHT_D	GPIOE, 15
 
-#define MOTOR_LEFT_A	GPIOE, 09
-#define MOTOR_LEFT_B	GPIOE, 08
+#define MOTOR_LEFT_A	GPIOE, 9
+#define MOTOR_LEFT_B	GPIOE, 8
 #define MOTOR_LEFT_C	GPIOE, 11
 #define MOTOR_LEFT_D	GPIOE, 10
 
+//Position states
+#define RIGHT_PLACE 	0
+#define ON_ITS_WAY		1
 
+//Speed states
+#define GOING_FORWARD	1
+#define GOING_BACKWARD	2
+
+//define if the motor should stop after a nb or steps
+#define POSITION_CONTROLLED	0
+#define SPEED_CONTROLLED	1
 /*
 *
 *   TO COMPLETE (completed)
@@ -54,6 +75,9 @@ static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
     {0,1,0,1},
     {1,0,0,1}
 };
+//variables going between 0 and NSTEP_ONE_EL_TURN controlling the electrical steps
+static int16_t el_step_turn_r = 0;
+static int16_t el_step_turn_l = 0;
 
 /*
 *
@@ -62,14 +86,16 @@ static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
 *   for example. They will be available only for the code of this file.
 */
 
-static int16_t step_counter_r = 0;
-static int16_t step_counter_l = 0;
-static uint8_t goal_nsteps_position_r = 0; 	//nb steps needed to reach the position wanted for the right motor
-static uint8_t goal_nsteps_position_l = 0;	//nb steps needed to reach the position wanted for the left motor
-static uint8_t motor_r_position_state = 0; 	//flag
-static uint8_t motor_l_position_state = 0; 	//flag
-static uint8_t motor_r_speed_state = 0; 	//flag
-static uint8_t motor_l_speed_state = 0; 	//flag
+static uint16_t step_counter_r = 0;	//nb steps done by the right motor since the beginning of the movement
+static uint16_t step_counter_l = 0;	//nb steps done by the left motor since the beginning of the movement
+static uint16_t goal_nsteps_position_r = 0; //nb steps needed to reach the position wanted for the right motor
+static uint16_t goal_nsteps_position_l = 0;	//nb steps needed to reach the position wanted for the left motor
+static uint8_t motor_r_position_state = 0; 	//0 (RIGHT_PLACE) if the motor is at the right position, 1 (ON_ITS_WAY) if the position isn't reached yet
+static uint8_t motor_l_position_state = 0; 	//0 (RIGHT_PLACE) if the motor is at the right position, 1 (ON_ITS_WAY) if the position isn't reached yet
+static uint8_t motor_r_speed_state = 0; 	//0 (NOT_MOVING) if motor stopped, 1 (GOING_FORWARD) if motor must move forward, 2 (GOING_BACKWARD) if move backward
+static uint8_t motor_l_speed_state = 0; 	//0 (NOT_MOVING) if motor stopped, 1 (GOING_FORWARD) if motor must move forward, 2 (GOING_BACKWARD) if move backward
+static uint8_t motor_state_r = 0;	//0 = POSITION_CONTROLLED, 1 = SPEED_CONTROLLED
+static uint8_t motor_state_l = 0;	//0 = POSITION_CONTROLLED, 1 = SPEED_CONTROLLED
 
 /*
 *
@@ -80,7 +106,19 @@ static uint8_t motor_l_speed_state = 0; 	//flag
 void motor_init(void)
 {
 	// Enable clocks for motor timers
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOEEN;
 	RCC->APB1ENR |= MOTOR_RIGHT_TIMER_EN | MOTOR_LEFT_TIMER_EN;
+
+	// right motor
+	gpio_config_output_pushpull(MOTOR_RIGHT_A);
+	gpio_config_output_pushpull(MOTOR_RIGHT_B);
+	gpio_config_output_pushpull(MOTOR_RIGHT_C);
+	gpio_config_output_pushpull(MOTOR_RIGHT_D);
+	// left motor
+	gpio_config_output_pushpull(MOTOR_LEFT_A);
+	gpio_config_output_pushpull(MOTOR_LEFT_B);
+	gpio_config_output_pushpull(MOTOR_LEFT_C);
+	gpio_config_output_pushpull(MOTOR_LEFT_D);
 
 	// Enable interrupt vector for motor timers
 	NVIC_EnableIRQ(MOTOR_RIGHT_IRQ);
@@ -89,54 +127,34 @@ void motor_init(void)
 
 	// Configure right motor timer
 	MOTOR_RIGHT_TIMER->PSC = (TIMER_CLOCK/TIMER_FREQ) - 1;      // Note: final timer clock  = timer clock / (prescaler + 1)
-	MOTOR_RIGHT_TIMER->ARR = 0;   				 // 0 so interrupt is not thrown
-	MOTOR_RIGHT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
-	MOTOR_RIGHT_TIMER->CR1 |= TIM_CR1_CEN;            // Enable timer
+	MOTOR_RIGHT_TIMER->ARR = 0;   					// 0 so interrupt is not thrown
+	MOTOR_RIGHT_TIMER->DIER |= TIM_DIER_UIE;        // Enable update interrupt
+	MOTOR_RIGHT_TIMER->CR1 |= TIM_CR1_CEN;          // Enable timer
 
 	// Configure left motor timer
 	MOTOR_LEFT_TIMER->PSC = (TIMER_CLOCK/TIMER_FREQ) - 1;      // Note: final timer clock  = timer clock / (prescaler + 1)
-	MOTOR_LEFT_TIMER->ARR = 0;   				 //
-	MOTOR_LEFT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
-	MOTOR_LEFT_TIMER->CR1 |= TIM_CR1_CEN;            // Enable timer
+	MOTOR_LEFT_TIMER->ARR = 0;   				 	// 0 so interrupt is not thrown
+	MOTOR_LEFT_TIMER->DIER |= TIM_DIER_UIE;         // Enable update interrupt
+	MOTOR_LEFT_TIMER->CR1 |= TIM_CR1_CEN;           // Enable timer
 }
 
-/*
-*
-*   TO COMPLETE (completed)
-*
-*   Updates the state of the gpios of the right motor given an array of 4 elements
-*   describing the state. For example step_table[0] which gives the first step.
-*/
 static void right_motor_update(const uint8_t *out)
 {
-	out[0] ? set_gpio(MOTOR_RIGHT_A) : clear_gpio(MOTOR_RIGHT_A);
-	out[1] ? set_gpio(MOTOR_RIGHT_B) : clear_gpio(MOTOR_RIGHT_B);
-	out[2] ? set_gpio(MOTOR_RIGHT_C) : clear_gpio(MOTOR_RIGHT_C);
-	out[3] ? set_gpio(MOTOR_RIGHT_D) : clear_gpio(MOTOR_RIGHT_D);
+	out[0] ? gpio_set(MOTOR_RIGHT_A) : gpio_clear(MOTOR_RIGHT_A);
+	out[1] ? gpio_set(MOTOR_RIGHT_B) : gpio_clear(MOTOR_RIGHT_B);
+	out[2] ? gpio_set(MOTOR_RIGHT_C) : gpio_clear(MOTOR_RIGHT_C);
+	out[3] ? gpio_set(MOTOR_RIGHT_D) : gpio_clear(MOTOR_RIGHT_D);
 }
 
-/*
-*
-*   TO COMPLETE (completed)
-*
-*   Updates the state of the gpios of the left motor given an array of 4 elements
-*   describing the state. For exeample step_table[0] which gives the first step.
-*/
 static void left_motor_update(const uint8_t *out)
 {
-	out[0] ? set_gpio(MOTOR_LEFT_A) : clear_gpio(MOTOR_LEFT_A); //fancy if else statements
-	out[1] ? set_gpio(MOTOR_LEFT_B) : clear_gpio(MOTOR_LEFT_B);
-	out[2] ? set_gpio(MOTOR_LEFT_C) : clear_gpio(MOTOR_LEFT_C);
-	out[3] ? set_gpio(MOTOR_LEFT_D) : clear_gpio(MOTOR_LEFT_D);
+	out[0] ? gpio_set(MOTOR_LEFT_A) : gpio_clear(MOTOR_LEFT_A); //fancy if else statements
+	out[1] ? gpio_set(MOTOR_LEFT_B) : gpio_clear(MOTOR_LEFT_B);
+	out[2] ? gpio_set(MOTOR_LEFT_C) : gpio_clear(MOTOR_LEFT_C);
+	out[3] ? gpio_set(MOTOR_LEFT_D) : gpio_clear(MOTOR_LEFT_D);
+
 }
 
-/*
-*
-*   TO COMPLETE (completed)
-*
-*   Stops the motors (all the gpio must be clear to 0) and set 0 to the ARR register of the timers to prevent
-*   the interrupts of the timers (because it never reaches 0 after an increment)
-*/
 void motor_stop(void)
 {
 	right_motor_update(step_halt);
@@ -145,44 +163,61 @@ void motor_stop(void)
 	MOTOR_LEFT_TIMER->ARR = 0;
 }
 
-/*
-*
-*   TO COMPLETE
-*
-*   Sets the position to reach for each motor.
-*   The parameters are in cm for the positions and in cm/s for the speeds.
-*/
-void motor_set_position(float position_r, float position_l, float speed_r, float speed_l)
+
+void motor_set_position_right(float position_r, float speed_r)
+//position_r is the absolute value (in cm) to reach and speed_r defines the speed and the direction
+//maximum value allowed :max position_r = 851, max speed_r = MOTOR_SPEED_LIMIT
 {
 	//reinitialization
 	step_counter_r = 0;
-	step_counter_l = 0;
+	position_r = abs(position_r);
 
 	//motor's position state flags and goal positions settings
 	if(position_r==0)
 	{
-		motor_r_position_state = 0;
+		motor_r_position_state = RIGHT_PLACE;
 		goal_nsteps_position_r = 0;
 	}
 	else
 	{
 		goal_nsteps_position_r = position_r * NSTEP_ONE_TURN/WHEEL_PERIMETER; //conversion cm to steps
-		motor_r_position_state = 1;
+		motor_r_position_state = ON_ITS_WAY;
 	}
 
+	motor_set_speed_right(speed_r);
+	motor_state_r = POSITION_CONTROLLED;
+}
+
+void motor_set_position_left(float position_l, float speed_l)
+//position_l is the absolute value (in cm) to reach and speed_l defines the speed and the direction
+//maximum value allowed :max position_l = 851, max speed_l = MOTOR_SPEED_LIMIT
+{
+	//reinitialization
+	step_counter_l = 0;
+	position_l = abs(position_l);
+
+	//motor's position state flags and goal positions settings
 	if(position_l==0)
 	{
-		motor_l_position_state = 0;
+		motor_l_position_state = RIGHT_PLACE;
 		goal_nsteps_position_l = 0;
 	}
 	else
 	{
 		goal_nsteps_position_l = position_l * NSTEP_ONE_TURN/WHEEL_PERIMETER; //conversion cm to steps
-		motor_l_position_state = 1;
+		motor_l_position_state = ON_ITS_WAY;
 	}
 
-	//motor speeds settings
-	motor_set_speed(speed_r, speed_l);
+	motor_set_speed_left(speed_l);
+	motor_state_l = POSITION_CONTROLLED;
+}
+
+void motor_set_position(float position_r, float position_l, float speed_r, float speed_l)
+//position_r and position_l is the absolute value (in cm) to reach, speed_r and speed_l define the speed and the direction
+//maximum value allowed :max position = 851, max speed = MOTOR_SPEED_LIMIT
+{
+	motor_set_position_right(position_r, speed_r);
+	motor_set_position_left(position_l, speed_l);
 }
 
 /*
@@ -196,43 +231,90 @@ void motor_set_position(float position_r, float position_l, float speed_r, float
 *   Don't forget to convert properly the units in order to have the correct ARR value
 *   depending on the TIMER_FREQ and the speed chosen.
 */
-void motor_set_speed(float speed_r, float speed_l)
+void motor_set_speed_right(float speed_r)
+// speed_r (in cm/s) define the speed and the direction
 {
 	if(speed_r == 0)
-	{	motor_r_speed_state=0;
+	{	motor_r_speed_state = NOT_MOVING; //motor is stopped
+		motor_r_position_state = RIGHT_PLACE;
+		right_motor_update(step_halt);
 		MOTOR_RIGHT_TIMER->ARR = 0;
 	}
 	else
 	{
 		if(speed_r > MOTOR_SPEED_LIMIT)
-			{MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN);}	//with speed transformation from cm/s to step/s
+		{
+			MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN); //with speed transformation from cm/s to step/s
+			motor_r_speed_state = GOING_FORWARD; //motor moves forward
+		}
 		else if(speed_r < -MOTOR_SPEED_LIMIT)
-			{MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN);}	//with speed transformation from cm/s to step/s
+		{
+			MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN); //with speed transformation from cm/s to step/s
+			motor_r_speed_state = GOING_BACKWARD; //motor moves backward
+		}
 		else
-			{MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(speed_r*NSTEP_ONE_TURN);}				//with speed transformation from cm/s to step/s
-
-		motor_r_speed_state=1;
+		{
+			MOTOR_RIGHT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(abs(speed_r)*NSTEP_ONE_TURN); //with speed transformation from cm/s to step/s
+			if(speed_r>0){motor_r_speed_state = GOING_FORWARD;} //motor moves forward
+			else{motor_r_speed_state = GOING_BACKWARD;} //motor moves backward
+		}
+		motor_state_r = SPEED_CONTROLLED;
 	}
-
+}
+void motor_set_speed_left(float speed_l)
+{
 	if(speed_l == 0)
 	{
-		motor_l_speed_state=0;
+		motor_l_speed_state = NOT_MOVING; //motor is stopped
+		motor_l_position_state = RIGHT_PLACE;
+		left_motor_update(step_halt);
 		MOTOR_LEFT_TIMER->ARR = 0;
 	}
 	else
 	{
 		if(speed_l > MOTOR_SPEED_LIMIT)
-			{MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN);}	//with speed transformation from cm/s to step/s
+		{
+			MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN); //with speed transformation from cm/s to step/s
+			motor_l_speed_state = GOING_FORWARD; //motor moves forward
+		}
 		else if(speed_l < -MOTOR_SPEED_LIMIT)
-			{MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN);}	//with speed transformation from cm/s to step/s
+		{
+			MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(MOTOR_SPEED_LIMIT*NSTEP_ONE_TURN); //with speed transformation from cm/s to step/s
+			motor_l_speed_state = GOING_BACKWARD; //motor moves backward
+		}
 		else
-			{MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(speed_l*NSTEP_ONE_TURN);}				//with speed transformation from cm/s to step/s
-
-		motor_l_speed_state=1;
+		{
+			MOTOR_LEFT_TIMER->ARR = TIMER_FREQ*WHEEL_PERIMETER/(abs(speed_l)*NSTEP_ONE_TURN); //with speed transformation from cm/s to step/s
+			if(speed_l>0){motor_l_speed_state = GOING_FORWARD;} //motor moves forward
+			else{motor_l_speed_state = GOING_BACKWARD;} //motor moves backward
+		}
+		motor_state_l = SPEED_CONTROLLED;
 	}
-
 }
 
+void motor_set_speed(float speed_r, float speed_l)
+{
+	motor_set_speed_right(speed_r);
+	motor_set_speed_left(speed_l);
+}
+
+uint8_t motor_right_move(void)
+{
+	if(motor_r_speed_state != NOT_MOVING){return MOVING;}
+	else{return NOT_MOVING;}
+}
+
+uint8_t motor_left_move(void)
+{
+	if(motor_l_speed_state != NOT_MOVING){return MOVING;}
+	else{return NOT_MOVING;}
+}
+
+uint8_t motors_move(void)
+{
+	if(motor_left_move() || motor_right_move()){return MOVING;}
+	else{return NOT_MOVING;}
+}
 /*
 *
 *   TO COMPLETE
@@ -256,9 +338,30 @@ void MOTOR_RIGHT_IRQHandler(void)
 
 	/* do something ... */
 
-
-
-
+	if(step_counter_r < goal_nsteps_position_r || motor_state_r == SPEED_CONTROLLED)
+	{
+		if(motor_r_speed_state == GOING_BACKWARD) //motor going backward
+		{
+			right_motor_update(step_table[el_step_turn_r]);
+			el_step_turn_r++;
+			if(el_step_turn_r == NSTEP_ONE_EL_TURN){el_step_turn_r=0;}
+			step_counter_r++;
+		}
+		else if(motor_r_speed_state == GOING_FORWARD) //motor going forward
+		{
+			right_motor_update(step_table[el_step_turn_r]);
+			el_step_turn_r--;
+			if(el_step_turn_r == -1){el_step_turn_r=NSTEP_ONE_EL_TURN-1;}
+			step_counter_r--;
+		}
+	}
+	else
+	{
+		motor_r_position_state = RIGHT_PLACE;
+		motor_r_speed_state = NOT_MOVING;
+		right_motor_update(step_halt); //avoid letting electricity in the motor phases
+		MOTOR_RIGHT_TIMER->ARR = 0; //stop the timer
+	}
 
 	// Clear interrupt flag
 	MOTOR_RIGHT_TIMER->SR &= ~TIM_SR_UIF;
@@ -288,8 +391,53 @@ void MOTOR_LEFT_IRQHandler(void)
 
 	/* do something ... */
 
+
+	if(step_counter_l < goal_nsteps_position_l || motor_state_l == SPEED_CONTROLLED)
+	{
+		if(motor_l_speed_state == GOING_FORWARD) //motor going forward
+		{
+			left_motor_update(step_table[el_step_turn_l]);
+			el_step_turn_l++;
+			if(el_step_turn_l == NSTEP_ONE_EL_TURN){el_step_turn_l=0;}
+			step_counter_l++;
+		}
+		else if(motor_l_speed_state == GOING_BACKWARD) //motor going backward
+		{
+			left_motor_update(step_table[el_step_turn_l]);
+			el_step_turn_l--;
+			if(el_step_turn_l == -1){el_step_turn_l=NSTEP_ONE_EL_TURN-1;}
+			step_counter_l--;
+		}
+	}
+	else
+	{
+		motor_l_position_state = RIGHT_PLACE;
+		motor_l_speed_state = NOT_MOVING;
+		left_motor_update(step_halt); //avoid letting electricity in the motor phases
+		MOTOR_LEFT_TIMER->ARR = 0; //stop the timer
+	}
+
 	// Clear interrupt flag
     MOTOR_LEFT_TIMER->SR &= ~TIM_SR_UIF;
     MOTOR_LEFT_TIMER->SR;	// Read back in order to ensure the effective IF clearing
 }
+
+//INSTRUCTIONS DE COMMANDE DU ROBOT ***********************************************************************************************************
+
+//il y a des problèmes concernant l'angle ici
+void robot_rotation(float speed, float angle, uint8_t turn_direction) //if turn_direction = 1 -> right, if = -1 -> left
+{
+	motor_set_position(ROBOT_PERIMETER*angle/720, ROBOT_PERIMETER*angle/720, -speed*turn_direction, speed*turn_direction);
+}
+
+void robot_rotation_180(void)
+{
+	motor_set_position(ROBOT_PERIMETER/4, ROBOT_PERIMETER/4, -STANDARD_SPEED, STANDARD_SPEED);
+}
+
+
+
+
+
+
 
