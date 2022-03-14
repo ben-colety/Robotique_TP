@@ -20,8 +20,10 @@
 #define NSTEP_ONE_EL_TURN   4  //number of steps to do 1 electrical turn
 #define NB_OF_PHASES        4  //number of phases of the motors
 #define WHEEL_PERIMETER     13 // [cm]
-#define ROBOT_PERIMETER		34.2 // [cm]
+#define ROBOT_PERIMETER		17.3// [cm] =ROBOT_WHEEL_GAP*PI
 #define ROBOT_WHEEL_GAP		5.5 // [cm]
+
+#define PI	3.14159
 
 #define STANDARD_SPEED		7 // [cm/s]
 
@@ -337,7 +339,7 @@ void MOTOR_RIGHT_IRQHandler(void)
     */
 
 	/* do something ... */
-
+	gpio_set(LED7);
 	if(step_counter_r < goal_nsteps_position_r || motor_state_r == SPEED_CONTROLLED)
 	{
 		if(motor_r_speed_state == GOING_BACKWARD) //motor going backward
@@ -345,15 +347,15 @@ void MOTOR_RIGHT_IRQHandler(void)
 			right_motor_update(step_table[el_step_turn_r]);
 			el_step_turn_r++;
 			if(el_step_turn_r == NSTEP_ONE_EL_TURN){el_step_turn_r=0;}
-			step_counter_r++;
 		}
 		else if(motor_r_speed_state == GOING_FORWARD) //motor going forward
 		{
 			right_motor_update(step_table[el_step_turn_r]);
 			el_step_turn_r--;
 			if(el_step_turn_r == -1){el_step_turn_r=NSTEP_ONE_EL_TURN-1;}
-			step_counter_r--;
 		}
+		step_counter_r++;
+
 	}
 	else
 	{
@@ -399,15 +401,15 @@ void MOTOR_LEFT_IRQHandler(void)
 			left_motor_update(step_table[el_step_turn_l]);
 			el_step_turn_l++;
 			if(el_step_turn_l == NSTEP_ONE_EL_TURN){el_step_turn_l=0;}
-			step_counter_l++;
+
 		}
 		else if(motor_l_speed_state == GOING_BACKWARD) //motor going backward
 		{
 			left_motor_update(step_table[el_step_turn_l]);
 			el_step_turn_l--;
 			if(el_step_turn_l == -1){el_step_turn_l=NSTEP_ONE_EL_TURN-1;}
-			step_counter_l--;
 		}
+		step_counter_l++;
 	}
 	else
 	{
@@ -423,17 +425,53 @@ void MOTOR_LEFT_IRQHandler(void)
 }
 
 //INSTRUCTIONS DE COMMANDE DU ROBOT ***********************************************************************************************************
-
-//il y a des problèmes concernant l'angle ici
-void robot_rotation(float speed, float angle, uint8_t turn_direction) //if turn_direction = 1 -> right, if = -1 -> left
+void robot_rotation_right(float speed, float angle)
 {
-	motor_set_position(ROBOT_PERIMETER*angle/720, ROBOT_PERIMETER*angle/720, -speed*turn_direction, speed*turn_direction);
+	motor_set_position(ROBOT_PERIMETER*angle/360, ROBOT_PERIMETER*angle/360, -speed, speed);
+}
+
+void robot_rotation_left(float speed, float angle)
+{
+	motor_set_position(ROBOT_PERIMETER*angle/360, ROBOT_PERIMETER*angle/360, speed, -speed);
 }
 
 void robot_rotation_180(void)
 {
-	motor_set_position(ROBOT_PERIMETER/4, ROBOT_PERIMETER/4, -STANDARD_SPEED, STANDARD_SPEED);
+	motor_set_position(ROBOT_PERIMETER/2, ROBOT_PERIMETER/2, -STANDARD_SPEED, STANDARD_SPEED);
 }
+
+void robot_turn_right(float speed, float final_angle, float radius) //min radius possible = ROBOT_PERIMETER/2
+{//ne marche pas encore
+	if(radius<ROBOT_PERIMETER/2)
+		radius = ROBOT_PERIMETER/2;
+	float r_big = (radius+(ROBOT_WHEEL_GAP/2)/radius);
+	float r_small = (radius-(ROBOT_WHEEL_GAP/2)/radius);
+
+	motor_set_position(final_angle*r_small/360, final_angle*r_big/360, speed*r_small, speed*r_big);
+}
+
+/*void robot_turn_left(float radius)
+{
+
+}*/
+
+void robot_straight_speed(float speed)
+{
+	motor_set_speed(speed, speed);
+}
+
+void robot_straight_position(float position)
+//go straight the amount of [cm] define in position, max position = 851, min position = -851
+{
+	if(position>0){motor_set_position(position, position, STANDARD_SPEED, STANDARD_SPEED);}
+	else{motor_set_position(position, position, -STANDARD_SPEED, -STANDARD_SPEED);}
+}
+
+/*void robot_stop(void)
+{
+	motor_stop();
+}*/
+
 
 
 

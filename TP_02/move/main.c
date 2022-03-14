@@ -57,7 +57,18 @@ int main(void)
     //config motors
     motor_init();
 
-    robot_rotation_180();
+    //motor_set_position(5,5,1, -1);
+
+    robot_turn_right(1,180,5); //ne marche pas encore
+
+    //motor_set_position(5,5,-13,-13); //marche normalement
+
+    //robot_rotation_180(); //marche normalement
+    //motor_set_position_right(-5,-5); //marche normalement
+    //motor_set_position_left(5,5); //marche normalement je pense
+    //motor_set_speed(5,5); //marche normalement
+    //motor_set_speed_left(5); //marche normalement
+    //motor_set_speed_right(5); //marche normalement
 
     while (1) {
     	selector_val = gpio_read(SEL_0);

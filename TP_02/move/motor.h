@@ -20,7 +20,15 @@ uint8_t motor_right_move(void); //return NOT_MOVING or MOVING
 uint8_t motor_left_move(void);	//return NOT_MOVING or MOVING
 uint8_t motors_move(void);		//return NOT_MOVING or MOVING
 
-void robot_rotation(float speed, float angle, uint8_t turn_direction); //if turn_direction = 1 -> right, if = -1 -> left
+//Simpler instruction set
+void robot_rotation_right(float speed, float angle);
+void robot_rotation_left(float speed, float angle);
 void robot_rotation_180(void);
+void robot_turn_right(float speed, float final_angle, float radius);
+void robot_straight_speed(float speed);
+void robot_straight_position(float position);
+//void robot_stop(void);
 
 #endif /* MOTOR_H */
+
+
