@@ -22,6 +22,7 @@
 #define WHEEL_PERIMETER     13 // [cm]
 #define ROBOT_PERIMETER		17.3// [cm] =ROBOT_WHEEL_GAP*PI
 #define ROBOT_WHEEL_GAP		5.5 // [cm]
+#define ROBOT_RADIUS		(ROBOT_WHEEL_GAP/2)
 
 #define PI	3.14159
 
@@ -440,14 +441,18 @@ void robot_rotation_180(void)
 	motor_set_position(ROBOT_PERIMETER/2, ROBOT_PERIMETER/2, -STANDARD_SPEED, STANDARD_SPEED);
 }
 
-void robot_turn_right(float speed, float final_angle, float radius) //min radius possible = ROBOT_PERIMETER/2
+void robot_turn_right(float speed, float final_angle, float radius)
+//radius is the average radius of the 2 wheels, min radius possible = ROBOT_WHEEL_GAP/2
 {//ne marche pas encore
-	if(radius<ROBOT_PERIMETER/2)
-		radius = ROBOT_PERIMETER/2;
-	float r_big = (radius+(ROBOT_WHEEL_GAP/2)/radius);
-	float r_small = (radius-(ROBOT_WHEEL_GAP/2)/radius);
+	if(radius<ROBOT_RADIUS)
+		radius = ROBOT_RADIUS;
+	float r_big = (radius+ROBOT_RADIUS);
+	float r_small = (radius-ROBOT_RADIUS);
+	float s_big = speed*r_big/radius;
+	float s_small = speed*r_small/radius;
 
-	motor_set_position(final_angle*r_small/360, final_angle*r_big/360, speed*r_small, speed*r_big);
+	motor_set_position(final_angle*r_small/360, final_angle*r_big/360, s_small, s_big);
+//	motor_set_speed(s_small, s_big);
 }
 
 /*void robot_turn_left(float radius)
