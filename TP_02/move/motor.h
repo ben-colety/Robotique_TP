@@ -25,6 +25,7 @@ void robot_rotation_right(float speed, float angle);
 void robot_rotation_left(float speed, float angle);
 void robot_rotation_180(void);
 void robot_turn_right(float speed, float final_angle, float radius);
+void robot_turn_left(float speed, float final_angle, float radius);
 void robot_straight_speed(float speed);
 void robot_straight_position(float position);
 //void robot_stop(void);

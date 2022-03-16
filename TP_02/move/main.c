@@ -59,8 +59,11 @@ int main(void)
 
     //motor_set_position(5,5,1, -1);
 
-    robot_turn_right(5,180,5); //ne marche pas encore
 
+    robot_turn_left(5,180,5);
+
+
+    //robot_turn_right(5,180,5); //marche
     //motor_set_position(5,5,-13,-13); //marche normalement
 
     //robot_rotation_180(); //marche normalement

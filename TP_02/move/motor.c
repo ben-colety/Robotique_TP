@@ -454,10 +454,17 @@ void robot_turn_right(float speed, float final_angle, float radius)
 //	motor_set_speed(s_small, s_big);
 }
 
-/*void robot_turn_left(float radius)
+void robot_turn_left(float speed, float final_angle, float radius)
 {
+	if(radius<ROBOT_RADIUS)
+		radius = ROBOT_RADIUS;
+	float r_big = (radius+ROBOT_RADIUS);
+	float r_small = (radius-ROBOT_RADIUS);
+	float s_big = speed*r_big/radius;
+	float s_small = speed*r_small/radius;
 
-}*/
+	motor_set_position( r_big*2*PI*final_angle/360, r_small*2*PI*final_angle/360, s_big, s_small);
+}
 
 void robot_straight_speed(float speed)
 {
