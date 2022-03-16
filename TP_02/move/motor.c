@@ -340,7 +340,6 @@ void MOTOR_RIGHT_IRQHandler(void)
     */
 
 	/* do something ... */
-	gpio_set(LED7);
 	if(step_counter_r < goal_nsteps_position_r || motor_state_r == SPEED_CONTROLLED)
 	{
 		if(motor_r_speed_state == GOING_BACKWARD) //motor going backward
@@ -451,7 +450,7 @@ void robot_turn_right(float speed, float final_angle, float radius)
 	float s_big = speed*r_big/radius;
 	float s_small = speed*r_small/radius;
 
-	motor_set_position(final_angle*r_small/360, final_angle*r_big/360, s_small, s_big);
+	motor_set_position(r_small*2*PI*final_angle/360, r_big*2*PI*final_angle/360, s_small, s_big);
 //	motor_set_speed(s_small, s_big);
 }
 
