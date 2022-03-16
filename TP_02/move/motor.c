@@ -478,6 +478,10 @@ void robot_straight_position(float position)
 	else{motor_set_position(position, position, -STANDARD_SPEED, -STANDARD_SPEED);}
 }
 
+void robot_test_small_radius(float radius)// 0<radius<ROBOT_RADIUS
+{
+
+}
 /*void robot_stop(void)
 {
 	motor_stop();
