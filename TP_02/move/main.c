@@ -59,11 +59,12 @@ int main(void)
 
     //motor_set_position(5,5,1, -1);
 
+    robot_test_small_radius_right(5,180,1);  //
+    //robot_test_small_radius_right(10,180,1.5);	//marche pas, la roue droite s'arrete trop tot
+    //robot_test_small_radius_right(5,180,1.5); //marche presque avec ces valeurs (petit problème, l'angle est moins de 180°)
 
-    robot_turn_left(5,180,5);
 
-
-    //robot_turn_right(5,180,5); //marche
+    //robot_turn_right(-5,180,5); //marche
     //motor_set_position(5,5,-13,-13); //marche normalement
 
     //robot_rotation_180(); //marche normalement
