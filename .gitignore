@@ -1,8 +1,0 @@
-*.o
-*.ko
-*.obj
-*.elf
-*.d
-*.list
-*.mem
-*.size

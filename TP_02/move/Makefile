@@ -4,14 +4,14 @@
 
 PROJECT = move
 
-CSRC = main.c gpio.c timer.c selector.c motor.c
+CSRC = main.c 
 CSRC += ../ST/system_clock_config.c ../ST/stm32f4xx_ll_rcc.c ../ST/system_stm32f4xx.c
 
 ASMSRC = ../ST/startup_stm32f407xx.s
 
 INCDIR = . ../ST
 
-LIBS = #libtp2.a
+LIBS = libtp2.a
 LIBDIR =
 LIB_OBJ = 
 
