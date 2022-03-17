@@ -188,6 +188,10 @@ int main(void)
                 imu_values.acceleration[X_AXIS], imu_values.acceleration[Y_AXIS], imu_values.acceleration[Z_AXIS], 
                 imu_values.gyro_rate[X_AXIS], imu_values.gyro_rate[Y_AXIS], imu_values.gyro_rate[Z_AXIS], 
                 imu_values.status);
+
+        chprintf((BaseSequentialStream *)&SD3, "%offset offset offset \r\n Ax=%-7d Ay=%-7d Az=%-7d Gx=%-7d Gy=%-7d Gz=%-7d\r\n",
+                        imu_values.acc_offset[X_AXIS], imu_values.acc_offset[Y_AXIS], imu_values.acc_offset[Z_AXIS],
+                        imu_values.gyro_offset[X_AXIS], imu_values.gyro_offset[Y_AXIS], imu_values.gyro_offset[Z_AXIS]);
        
         show_gravity(&imu_values);
         chThdSleepMilliseconds(100);

@@ -96,8 +96,20 @@ void imu_stop(void) {
 }
 
 void imu_compute_offset(messagebus_topic_t * imu_topic, uint16_t nb_samples){
+	uint32_t acc_offset[NB_AXIS];
+	uint32_t gyro_offset[NB_AXIS];
 
-
+	for(uint16_t counter = 0; counter < nb_samples; counter++){
+        messagebus_topic_wait(imu_topic, &imu_values, sizeof(imu_values));
+		for(uint8_t axis_counter = X_AXIS; axis_counter < NB_AXIS; axis_counter++){
+	        acc_offset[axis_counter] += imu_values.acc_raw[axis_counter];
+			gyro_offset[axis_counter] += imu_values.gyro_raw[axis_counter];
+		}
+	}
+	for(uint8_t axis_counter = X_AXIS; axis_counter < NB_AXIS; axis_counter++){
+		imu_values.acc_offset[axis_counter] = acc_offset[axis_counter]/nb_samples;
+		imu_values.gyro_offset[axis_counter] = gyro_offset[axis_counter]/nb_samples;
+	}
 }
 
 int16_t get_acc(uint8_t axis) {
