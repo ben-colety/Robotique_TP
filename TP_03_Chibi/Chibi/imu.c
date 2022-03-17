@@ -7,6 +7,10 @@
 #define STANDARD_GRAVITY    9.80665f
 #define DEG2RAD(deg) (deg / 180 * M_PI)
 
+#define LSB_ACC  		16384
+#define LSB_DEG_SEC  	131
+
+
 extern messagebus_t bus;
 
 static imu_msg_t imu_values;
@@ -21,10 +25,16 @@ static bool imu_configured = false;
  * 			RAW accelerometer to m/s^2 acceleration
  * 			RAW gyroscope to rad/s speed
  */
+/* configured for 	MPU9250_ACC_FULL_RANGE_2G
+*					MPU9250_GYRO_FULL_RANGE_250DPS
+*		            MPU9250_SAMPLE_RATE_DIV(100));
+*/
 void imu_compute_units(void){
-	/*
-    *   TASK 10 : TO COMPLETE
-    */
+    //messagebus_topic_wait(imu_topic, &imu_values, sizeof(imu_values));
+	for(uint8_t axis = X_AXIS; axis < NB_AXIS; axis++){
+		imu_values.acceleration[axis] = (imu_values.acc_raw[axis])/LSB_ACC * STANDARD_GRAVITY;
+		imu_values.gyro_rate[axis] = DEG2RAD(imu_values.gyro_raw[axis]/LSB_DEG_SEC);
+	}
 }
 
  /**
