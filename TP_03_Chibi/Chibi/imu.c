@@ -97,9 +97,7 @@ void imu_stop(void) {
 
 void imu_compute_offset(messagebus_topic_t * imu_topic, uint16_t nb_samples){
 
-    /*
-    *   TASK 9 : TO COMPLETE
-    */
+
 }
 
 int16_t get_acc(uint8_t axis) {

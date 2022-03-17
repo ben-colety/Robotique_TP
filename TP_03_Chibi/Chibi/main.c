@@ -89,21 +89,21 @@ static THD_FUNCTION(ThdBodyLed, arg) {
         *   2nd case :  make the thread work during the 500ms
         */
 
-        // //about 500ms at 168MHz
-        // for(uint32_t i = 0 ; i < 21000000 ; i++){
-        //     __asm__ volatile ("nop");
-        // }
+         //about 500ms at 168MHz
+         //for(uint32_t i = 0 ; i < 21000000 ; i++){
+         //    __asm__ volatile ("nop");
+         //}
 
         /*
         *   3rd case :  make the thread work during the 500ms
         *               and block the preemption
         */
 
-        // chSysLock();
-        // for(uint32_t i = 0 ; i < 21000000 ; i++){
-        //     __asm__ volatile ("nop");
-        // }
-        // chSysUnlock();
+        //chSysLock();
+        //for(uint32_t i = 0 ; i < 21000000 ; i++){
+        //    __asm__ volatile ("nop");
+        //}
+        //chSysUnlock();
     }
 }
 
