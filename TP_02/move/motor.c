@@ -478,6 +478,17 @@ void robot_straight_position(float position)
 	else{motor_set_position(position, position, -STANDARD_SPEED, -STANDARD_SPEED);}
 }
 
+void robot_test_small_radius_right(float speed, float final_angle, float radius)// 0<radius<ROBOT_RADIUS
+{
+	float r_left = (radius+ROBOT_RADIUS);
+	float r_right = abs(radius-ROBOT_RADIUS); //peut-être pas necéssaire, à tester, ça a résolut qqch je crois mais pas sur
+
+	float s_left = speed*r_left/radius;
+	float s_right = speed*r_right/radius;
+
+	motor_set_position(r_right*2*PI*final_angle/360, r_left*2*PI*final_angle/360, -s_right, s_left);
+	//motor_set_speed(-s_right, s_left);
+}
 /*void robot_stop(void)
 {
 	motor_stop();

@@ -28,6 +28,7 @@ void robot_turn_right(float speed, float final_angle, float radius);
 void robot_turn_left(float speed, float final_angle, float radius);
 void robot_straight_speed(float speed);
 void robot_straight_position(float position);
+void robot_test_small_radius_right(float speed, float final_angle, float radius);
 //void robot_stop(void);
 
 #endif /* MOTOR_H */
