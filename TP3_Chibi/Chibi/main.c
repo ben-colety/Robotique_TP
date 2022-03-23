@@ -7,7 +7,9 @@
 #include <imu.h>
 
 #define NB_SAMPLES_OFFSET	200
-#define MEASURE_TOLERANCE	0.5	//tolerance for measurement close to 0
+#define GRAVITY				9.81 //[m/s^2]
+#define PI					3.14
+#define ANGLE_TOLERANCE		sin(PI/200)*GRAVITY	//tolerance for measurement close to 0
 
 messagebus_t bus;
 MUTEX_DECL(bus_lock);
@@ -131,13 +133,14 @@ void show_gravity(imu_msg_t *imu_values){
     //reset the timer counter
     GPTD11.tim->CNT = 0;
 
-
-    if(fabs(imu_values->acceleration[X_AXIS])>fabs(imu_values->acceleration[Y_AXIS])&&
-    		fabs(imu_values->acceleration[X_AXIS])>fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE){
+if(fabs(imu_values->acceleration[Z_AXIS])<fabs(-GRAVITY+ANGLE_TOLERANCE))
+{
+    if(fabs(imu_values->acceleration[X_AXIS])>fabs(imu_values->acceleration[Y_AXIS]))//&&fabs(imu_values->acceleration[X_AXIS])>fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE)
+	{
     	//turn off irrelevant leds
     	palSetPad(GPIOD, GPIOD_LED1);
     	palSetPad(GPIOD, GPIOD_LED5);
-    	palSetPad(GPIOB, GPIOB_LED_BODY);
+    	palClearPad(GPIOB, GPIOB_LED_BODY);
     	if(imu_values->acceleration[X_AXIS] > 0){
     		palSetPad(GPIOD, GPIOD_LED3);
     		palClearPad(GPIOD, GPIOD_LED7);	//turn on led7
@@ -145,12 +148,12 @@ void show_gravity(imu_msg_t *imu_values){
     		palSetPad(GPIOD, GPIOD_LED7);
     		palClearPad(GPIOD, GPIOD_LED3);	//turn on led3
     	}
-    }else if(fabs(imu_values->acceleration[Y_AXIS])>fabs(imu_values->acceleration[X_AXIS])&&
-    		fabs(imu_values->acceleration[Y_AXIS])>fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE){
+    }else //if(fabs(imu_values->acceleration[Y_AXIS])>fabs(imu_values->acceleration[X_AXIS]))//&&fabs(imu_values->acceleration[Y_AXIS])>fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE){
+    	{
     	//turn off irrelevant leds
     	palSetPad(GPIOD, GPIOD_LED3);
     	palSetPad(GPIOD, GPIOD_LED7);
-    	palSetPad(GPIOB, GPIOB_LED_BODY);
+    	palClearPad(GPIOB, GPIOB_LED_BODY);
     	if(imu_values->acceleration[Y_AXIS] > 0){
     		palSetPad(GPIOD, GPIOD_LED1);
     		palClearPad(GPIOD, GPIOD_LED5);	//turn on led5
@@ -158,9 +161,9 @@ void show_gravity(imu_msg_t *imu_values){
     		palSetPad(GPIOD, GPIOD_LED5);
     		palClearPad(GPIOD, GPIOD_LED1);	//turn on led1
     	}
-    }else if((fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE)>fabs(imu_values->acceleration[X_AXIS])&&
-    		(fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE)>fabs(imu_values->acceleration[Y_AXIS])){
-		if(imu_values->acceleration[Z_AXIS] > 0){
+    }/*else if((fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE)>fabs(imu_values->acceleration[X_AXIS]))//&&(fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE)>fabs(imu_values->acceleration[Y_AXIS])){
+    {
+    	if(imu_values->acceleration[Z_AXIS] > 0){
 			palSetPad(GPIOD, GPIOD_LED1);
 			palSetPad(GPIOD, GPIOD_LED3);
 			palSetPad(GPIOD, GPIOD_LED5);
@@ -172,8 +175,21 @@ void show_gravity(imu_msg_t *imu_values){
 			palSetPad(GPIOD, GPIOD_LED5);
 			palSetPad(GPIOD, GPIOD_LED7);
 			palSetPad(GPIOB, GPIOB_LED_BODY);	//turn off body led
-		}
-    }
+		}*/
+}else{
+	if(imu_values->acceleration[Z_AXIS] > 0){
+		palSetPad(GPIOD, GPIOD_LED1);
+		palSetPad(GPIOD, GPIOD_LED3);
+		palSetPad(GPIOD, GPIOD_LED5);
+		palSetPad(GPIOD, GPIOD_LED7);
+		palSetPad(GPIOB, GPIOB_LED_BODY);	//turn on body led
+	}else{
+		palSetPad(GPIOD, GPIOD_LED1);
+		palSetPad(GPIOD, GPIOD_LED3);
+		palSetPad(GPIOD, GPIOD_LED5);
+		palSetPad(GPIOD, GPIOD_LED7);
+		palClearPad(GPIOB, GPIOB_LED_BODY);	//turn off body led
+}}
 	/*
 	*   Use this to capture the counter and stop to prevent
 	*   the system to switch to another thread.
