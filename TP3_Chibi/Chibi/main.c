@@ -6,7 +6,8 @@
 #include <i2c_bus.h>
 #include <imu.h>
 
-#define NB_SAMPLES_OFFSET     200
+#define NB_SAMPLES_OFFSET	200
+#define MEASURE_TOLERANCE	0.5	//tolerance for measurement close to 0
 
 messagebus_t bus;
 MUTEX_DECL(bus_lock);
@@ -15,14 +16,22 @@ CONDVAR_DECL(bus_condvar);
 void panic_handler(const char *reason)
 {
     (void)reason;
-
+/*
     palClearPad(GPIOD, GPIOD_LED1);
     palClearPad(GPIOD, GPIOD_LED3);
     palClearPad(GPIOD, GPIOD_LED5);
     palClearPad(GPIOD, GPIOD_LED7);
     palClearPad(GPIOD, GPIOD_LED_FRONT);
     palClearPad(GPIOB, GPIOB_LED_BODY);
-    
+
+    palSetPad(GPIOD, GPIOD_LED1);
+	palSetPad(GPIOD, GPIOD_LED3);
+	palSetPad(GPIOD, GPIOD_LED5);
+	palSetPad(GPIOD, GPIOD_LED7);
+	palSetPad(GPIOD, GPIOD_LED_FRONT);
+	palSetPad(GPIOB, GPIOB_LED_BODY);
+*/
+    palClearPad(GPIOD, GPIOD_LED_FRONT);
     while (true) {
 
     }
@@ -41,7 +50,7 @@ static void serial_start(void)
 }
 
 static void timer11_start(void){
-    //General Purpose Timer configuration   
+    //General Purpose Timer configuration
     //timer 11 is a 16 bit timer so we can measure time
     //to about 65ms with a 1Mhz counter
     static const GPTConfig gpt11cfg = {
@@ -56,20 +65,20 @@ static void timer11_start(void){
     gptStartContinuous(&GPTD11, 0xFFFF);
 }
 
-static THD_WORKING_AREA(waThdFrontLed, 128);
-static THD_FUNCTION(ThdFrontLed, arg) {
+		static THD_WORKING_AREA(waThdFrontLed, 128);
+		static THD_FUNCTION(ThdFrontLed, arg) {
 
-    chRegSetThreadName(__FUNCTION__);
-    (void)arg;
+			chRegSetThreadName(__FUNCTION__);
+			(void)arg;
 
-    systime_t time;
+			systime_t time;
 
-    while(1){
-        time = chVTGetSystemTime();
-        palTogglePad(GPIOD, GPIOD_LED_FRONT);
-        chThdSleepUntilWindowed(time, time + MS2ST(10));
-    }
-}
+			while(1){
+				time = chVTGetSystemTime();
+				palTogglePad(GPIOD, GPIOD_LED_FRONT);
+				chThdSleepUntilWindowed(time, time + MS2ST(10));
+			}
+		}
 
 static THD_WORKING_AREA(waThdBodyLed, 128);
 static THD_FUNCTION(ThdBodyLed, arg) {
@@ -122,19 +131,56 @@ void show_gravity(imu_msg_t *imu_values){
     //reset the timer counter
     GPTD11.tim->CNT = 0;
 
-    /*
-    *   Use this to capture the counter and stop to prevent 
-    *   the system to switch to another thread.
-    *   Place it at the end of the code you want to measure
-    */
+
+    if(fabs(imu_values->acceleration[X_AXIS])>fabs(imu_values->acceleration[Y_AXIS])&&
+    		fabs(imu_values->acceleration[X_AXIS])>fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE){
+    	//turn off irrelevant leds
+    	palSetPad(GPIOD, GPIOD_LED1);
+    	palSetPad(GPIOD, GPIOD_LED5);
+    	palSetPad(GPIOB, GPIOB_LED_BODY);
+    	if(imu_values->acceleration[X_AXIS] > 0){
+    		palSetPad(GPIOD, GPIOD_LED3);
+    		palClearPad(GPIOD, GPIOD_LED7);	//turn on led7
+    	}else{
+    		palSetPad(GPIOD, GPIOD_LED7);
+    		palClearPad(GPIOD, GPIOD_LED3);	//turn on led3
+    	}
+    }else if(fabs(imu_values->acceleration[Y_AXIS])>fabs(imu_values->acceleration[X_AXIS])&&
+    		fabs(imu_values->acceleration[Y_AXIS])>fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE){
+    	//turn off irrelevant leds
+    	palSetPad(GPIOD, GPIOD_LED3);
+    	palSetPad(GPIOD, GPIOD_LED7);
+    	palSetPad(GPIOB, GPIOB_LED_BODY);
+    	if(imu_values->acceleration[Y_AXIS] > 0){
+    		palSetPad(GPIOD, GPIOD_LED1);
+    		palClearPad(GPIOD, GPIOD_LED5);	//turn on led5
+    	}else{
+    		palSetPad(GPIOD, GPIOD_LED5);
+    		palClearPad(GPIOD, GPIOD_LED1);	//turn on led1
+    	}
+    }else if((fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE)>fabs(imu_values->acceleration[X_AXIS])&&
+    		(fabs(imu_values->acceleration[Z_AXIS])+MEASURE_TOLERANCE)>fabs(imu_values->acceleration[Y_AXIS])){
+		if(imu_values->acceleration[Z_AXIS] > 0){
+			palSetPad(GPIOD, GPIOD_LED1);
+			palSetPad(GPIOD, GPIOD_LED3);
+			palSetPad(GPIOD, GPIOD_LED5);
+			palSetPad(GPIOD, GPIOD_LED7);
+			palClearPad(GPIOB, GPIOB_LED_BODY);	//turn on body led
+		}else{
+			palSetPad(GPIOD, GPIOD_LED1);
+			palSetPad(GPIOD, GPIOD_LED3);
+			palSetPad(GPIOD, GPIOD_LED5);
+			palSetPad(GPIOD, GPIOD_LED7);
+			palSetPad(GPIOB, GPIOB_LED_BODY);	//turn off body led
+		}
+    }
+	/*
+	*   Use this to capture the counter and stop to prevent
+	*   the system to switch to another thread.
+	*   Place it at the end of the code you want to measure
+	*/
     time = GPTD11.tim->CNT;
     chSysUnlock();
-
-    /*
-    *   TASK 11 : TO COMPLETE
-    */
-
-
 }
 
 int main(void)
@@ -177,23 +223,23 @@ int main(void)
 
 
         //prints raw values
-        chprintf((BaseSequentialStream *)&SD3, "%Ax=%-7d Ay=%-7d Az=%-7d Gx=%-7d Gy=%-7d Gz=%-7d\r\n", 
-                imu_values.acc_raw[X_AXIS], imu_values.acc_raw[Y_AXIS], imu_values.acc_raw[Z_AXIS], 
+        chprintf((BaseSequentialStream *)&SD3, "%Ax=%-7d Ay=%-7d Az=%-7d Gx=%-7d Gy=%-7d Gz=%-7d\r\n",
+                imu_values.acc_raw[X_AXIS], imu_values.acc_raw[Y_AXIS], imu_values.acc_raw[Z_AXIS],
                 imu_values.gyro_raw[X_AXIS], imu_values.gyro_raw[Y_AXIS], imu_values.gyro_raw[Z_AXIS]);
 
         //prints raw values with offset correction
-        chprintf((BaseSequentialStream *)&SD3, "%Ax=%-7d Ay=%-7d Az=%-7d Gx=%-7d Gy=%-7d Gz=%-7d\r\n", 
-                imu_values.acc_raw[X_AXIS]-imu_values.acc_offset[X_AXIS], 
-                imu_values.acc_raw[Y_AXIS]-imu_values.acc_offset[Y_AXIS], 
-                imu_values.acc_raw[Z_AXIS]-imu_values.acc_offset[Z_AXIS], 
-                imu_values.gyro_raw[X_AXIS]-imu_values.gyro_offset[X_AXIS], 
-                imu_values.gyro_raw[Y_AXIS]-imu_values.gyro_offset[Y_AXIS], 
+        chprintf((BaseSequentialStream *)&SD3, "%Ax=%-7d Ay=%-7d Az=%-7d Gx=%-7d Gy=%-7d Gz=%-7d\r\n",
+                imu_values.acc_raw[X_AXIS]-imu_values.acc_offset[X_AXIS],
+                imu_values.acc_raw[Y_AXIS]-imu_values.acc_offset[Y_AXIS],
+                imu_values.acc_raw[Z_AXIS]-imu_values.acc_offset[Z_AXIS],
+                imu_values.gyro_raw[X_AXIS]-imu_values.gyro_offset[X_AXIS],
+                imu_values.gyro_raw[Y_AXIS]-imu_values.gyro_offset[Y_AXIS],
                 imu_values.gyro_raw[Z_AXIS]-imu_values.gyro_offset[Z_AXIS]);
 		*/
         //prints values in readable units
         chprintf((BaseSequentialStream *)&SD3, "Readable\r\n%Ax=%.2f Ay=%.2f Az=%.2f Gx=%.2f Gy=%.2f Gz=%.2f (%x)\r\n\n",
-                imu_values.acceleration[X_AXIS], imu_values.acceleration[Y_AXIS], imu_values.acceleration[Z_AXIS], 
-                imu_values.gyro_rate[X_AXIS], imu_values.gyro_rate[Y_AXIS], imu_values.gyro_rate[Z_AXIS], 
+                imu_values.acceleration[X_AXIS], imu_values.acceleration[Y_AXIS], imu_values.acceleration[Z_AXIS],
+                imu_values.gyro_rate[X_AXIS], imu_values.gyro_rate[Y_AXIS], imu_values.gyro_rate[Z_AXIS],
                 imu_values.status);
 
         show_gravity(&imu_values);
